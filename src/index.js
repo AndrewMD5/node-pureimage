@@ -48,6 +48,36 @@ export function encodePNGToStream(bitmap, outstream) {
     });
 }
 
+/**
+ * Encode the PNG image to a buffer
+ *
+ * @param {Bitmap} bitmap    An instance of {@link Bitmap} to be encoded to PNG, `bitmap.data` must be a buffer of raw PNG data
+ *
+ * @returns {Uint8Array}
+ */
+export function encodePNGSync(bitmap) {
+    if (!bitmap.hasOwnProperty('data') || !bitmap.hasOwnProperty('width') || !bitmap.hasOwnProperty('height')) {
+        return rej(new TypeError('Invalid bitmap image provided'));
+    }
+
+    const png = new PNG({
+        width: bitmap.width,
+        height: bitmap.height
+    })
+
+    for (let i = 0; i < bitmap.width; i++) {
+        for (let j = 0; j < bitmap.height; j++) {
+            const rgba = bitmap.getPixelRGBA(i, j)
+            const n = (j * bitmap.width + i) * 4
+            const bytes = getBytesBigEndian(rgba)
+            for (let k = 0; k < 4; k++) {
+                png.data[n + k] = bytes[k];
+            }
+        }
+    }
+    return PNG.sync.write(png);
+}
+
 
 /**
  * Decode PNG From Stream
@@ -73,6 +103,23 @@ export function decodePNGFromStream(instream) {
     })
 };
 
+/**
+ * Decode PNG From UInt8Array
+ *
+ * Decode a PNG file from a UIntArray
+ *
+ * @param {Uint8Array} data A UInt8Array of raw PNG data
+ *
+ * @returns {Bitmap}
+ */
+export function decodePNGSync(data) {
+    const png = PNG.sync.read(data);
+    const bitmap = new Bitmap(png.width, png.height, {})
+    for (let i = 0; i < bitmap.data.length; i++) {
+        bitmap.data[i] = png.data[i];
+    }
+    return bitmap;
+}
 
 /**
  * Encode JPEG To Stream

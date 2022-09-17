@@ -19,6 +19,17 @@ export function encodePNGToStream(
 ): Promise<void>;
 
 /**
+ * Encode the PNG image to a buffer
+ *
+ * @param {Bitmap} bitmap    An instance of {@link Bitmap} to be encoded to PNG, `bitmap.data` must be a buffer of raw PNG data
+ *
+ * @returns {Uint8Array}
+ */
+export function encodePNGToStream(
+    bitmap: Bitmap
+): Uint8Array;
+
+/**
  * Decode PNG From Stream
  *
  * Decode a PNG file from an incoming readable stream
@@ -28,6 +39,17 @@ export function encodePNGToStream(
  * @returns {Promise<Bitmap>}
  */
 export function decodePNGFromStream(instream: Stream): Promise<Bitmap>;
+
+/**
+ * Decode PNG From UInt8Array
+ *
+ * Decode a PNG file from a UIntArray
+ *
+ * @param {Uint8Array} data A UInt8Array of raw PNG data
+ *
+ * @returns {Bitmap}
+ */
+export function decodePNGSync(data: Uint8Array): Bitmap;
 
 /**
  * Encode JPEG To Stream
