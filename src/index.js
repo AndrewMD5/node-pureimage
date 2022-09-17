@@ -1,12 +1,12 @@
-import {Bitmap} from './bitmap.js'
-import {PNG} from "pngjs"
+import { Bitmap } from './bitmap.js'
+import { PNG } from "pngjs/browser"
 import * as JPEG from "jpeg-js"
-import {getBytesBigEndian} from './uint32.js'
+import { getBytesBigEndian } from './uint32.js'
 
 export * from './text.js'
 
-export function make (w,h,options) {
-    return new Bitmap(w,h,options)
+export function make(w, h, options) {
+    return new Bitmap(w, h, options)
 }
 
 /**
@@ -18,8 +18,8 @@ export function make (w,h,options) {
  * @returns {Promise<void>}
  */
 export function encodePNGToStream(bitmap, outstream) {
-    return new Promise((res,rej)=>{
-        if(!bitmap.hasOwnProperty('data') || !bitmap.hasOwnProperty('width') || !bitmap.hasOwnProperty('height')) {
+    return new Promise((res, rej) => {
+        if (!bitmap.hasOwnProperty('data') || !bitmap.hasOwnProperty('width') || !bitmap.hasOwnProperty('height')) {
             return rej(new TypeError('Invalid bitmap image provided'));
         }
 
@@ -28,13 +28,13 @@ export function encodePNGToStream(bitmap, outstream) {
             height: bitmap.height
         })
 
-        for(let i=0; i<bitmap.width; i++) {
-            for(let j=0; j<bitmap.height; j++) {
+        for (let i = 0; i < bitmap.width; i++) {
+            for (let j = 0; j < bitmap.height; j++) {
                 const rgba = bitmap.getPixelRGBA(i, j)
                 const n = (j * bitmap.width + i) * 4
                 const bytes = getBytesBigEndian(rgba)
-                for(let k=0; k<4; k++) {
-                    png.data[n+k] = bytes[k];
+                for (let k = 0; k < 4; k++) {
+                    png.data[n + k] = bytes[k];
                 }
             }
         }
@@ -59,17 +59,17 @@ export function encodePNGToStream(bitmap, outstream) {
  * @returns {Promise<Bitmap>}
  */
 export function decodePNGFromStream(instream) {
-    return new Promise((res,rej)=>{
+    return new Promise((res, rej) => {
         instream.pipe(new PNG())
-            .on("parsed", function() {
-                const bitmap = new Bitmap(this.width, this.height,{})
-                for(let i=0; i<bitmap.data.length; i++) {
+            .on("parsed", function () {
+                const bitmap = new Bitmap(this.width, this.height, {})
+                for (let i = 0; i < bitmap.data.length; i++) {
                     bitmap.data[i] = this.data[i];
                 }
                 res(bitmap);
-            }).on("error", function(err) {
-            rej(err);
-        });
+            }).on("error", function (err) {
+                rej(err);
+            });
     })
 };
 
@@ -86,8 +86,8 @@ export function decodePNGFromStream(instream) {
  */
 export function encodeJPEGToStream(img, outstream, quality) {
     quality = quality || 90;
-    return new Promise((res,rej)=> {
-        if(!img.hasOwnProperty('data') || !img.hasOwnProperty('width') || !img.hasOwnProperty('height')) {
+    return new Promise((res, rej) => {
+        if (!img.hasOwnProperty('data') || !img.hasOwnProperty('width') || !img.hasOwnProperty('height')) {
             return rej(new TypeError('Invalid bitmap image provided'));
         }
         const data = {
@@ -113,20 +113,34 @@ export function encodeJPEGToStream(img, outstream, quality) {
  * @returns {Promise<Bitmap>}
  */
 export function decodeJPEGFromStream(data) {
-    return new Promise((res,rej)=>{
+    return new Promise((res, rej) => {
         try {
             const chunks = []
             data.on('data', chunk => chunks.push(chunk));
-            data.on('end',() => {
-                const buf = Buffer.concat(chunks)
+            data.on('end', () => {
+
+                // Get the total length of all arrays.
+                let length = 0;
+                chunks.forEach(item => {
+                    length += item.length;
+                });
+
+                // Create a new array with total length and merge all source arrays.
+                const buf = new Uint8Array(length);
+                let offset = 0;
+                chunks.forEach(item => {
+                    buf.set(item, offset);
+                    offset += item.length;
+                });
+
                 let rawImageData = null
                 try {
                     rawImageData = JPEG.decode(buf);
-                } catch(err) {
+                } catch (err) {
                     rej(err);
                     return
                 }
-                const bitmap = new Bitmap(rawImageData.width, rawImageData.height,{})
+                const bitmap = new Bitmap(rawImageData.width, rawImageData.height, {})
                 for (let x_axis = 0; x_axis < rawImageData.width; x_axis++) {
                     for (let y_axis = 0; y_axis < rawImageData.height; y_axis++) {
                         const n = (y_axis * rawImageData.width + x_axis) * 4
