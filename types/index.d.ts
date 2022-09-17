@@ -25,7 +25,7 @@ export function encodePNGToStream(
  *
  * @returns {Uint8Array}
  */
-export function encodePNGToStream(
+export function encodePNGSync(
     bitmap: Bitmap
 ): Uint8Array;
 
