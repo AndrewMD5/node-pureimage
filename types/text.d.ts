@@ -27,9 +27,9 @@ type FontRecord = {
 export function registerFont(
     binaryPath: string,
     family: string,
-    weight: number,
-    style: string,
-    variant: string
+    weight?: number,
+    style?: string,
+    variant?: string
 ): FontRecord;
 
 /**
@@ -46,9 +46,9 @@ export function registerFont(
 export function registerFontBuffer(
     fontBuffer: ArrayBuffer,
     family: string,
-    weight: number,
-    style: string,
-    variant: string
+    weight?: number,
+    style?: string,
+    variant?: string
 ): FontRecord;
 
 /**@ignore */
