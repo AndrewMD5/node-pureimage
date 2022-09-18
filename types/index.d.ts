@@ -1,7 +1,9 @@
 import { Bitmap } from './bitmap.js';
+export { Bitmap } from './bitmap.js';
+export { Context } from './context';
 import { Stream } from 'stream';
 
-export { registerFont } from './text.js';
+export { registerFont, registerFontBuffer } from './text.js';
 
 export function make(w: number, h: number, options: any): Bitmap;
 
