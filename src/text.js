@@ -32,9 +32,9 @@ export function registerFont(binaryPath, family, weight, style, variant) {
         variant: variant,
         loaded: false,
         font: null,
-        load: function(cb) {
-            if(this.loaded) {
-                if(cb)cb();
+        load: function (cb) {
+            if (this.loaded) {
+                if (cb) cb();
                 return;
             }
             const self = this
@@ -42,11 +42,11 @@ export function registerFont(binaryPath, family, weight, style, variant) {
                 if (err) throw new Error('Could not load font: ' + err);
                 self.loaded = true;
                 self.font = font;
-                if(cb)cb();
+                if (cb) cb();
             });
         },
-        loadSync: function() {
-            if(this.loaded) {
+        loadSync: function () {
+            if (this.loaded) {
                 return;
             }
             try {
@@ -57,14 +57,71 @@ export function registerFont(binaryPath, family, weight, style, variant) {
                 throw new Error('Could not load font: ' + err);
             }
         },
-        loadPromise: function() {
-            return new Promise((res,rej)=>{
-                this.load(()=>res())
+        loadPromise: function () {
+            return new Promise((res, rej) => {
+                this.load(() => res())
             })
         }
     };
     return _fonts[family];
 }
+
+/**
+ * Register a font from an ArrayBuffer
+ *
+ * @param {ArrayBuffer} fontBuffer A containing the binary font file(.eot, .ttf etc.)
+ * @param {string} family     The name to give the font
+ * @param {number} weight     The font weight to use
+ * @param {string} style      Font style
+ * @param {string} variant    Font variant
+ *
+ * @returns {font} Font instance
+ */
+export function registerFontBuffer(fontBuffer, family, weight, style, variant) {
+    _fonts[family] = {
+        binary: '[memory]',
+        family: family,
+        weight: weight,
+        style: style,
+        variant: variant,
+        loaded: false,
+        font: null,
+        load: function (cb) {
+            if (this.loaded) {
+                if (cb) cb();
+                return;
+            }
+
+            try {
+                this.font = opentype.parse(fontBuffer);
+                this.loaded = true;
+                if (cb) cb();
+            } catch (err) {
+                throw new Error('Could not load font: ' + err);
+            }
+        },
+        loadSync: function () {
+            if (this.loaded) {
+                return;
+            }
+            try {
+                this.font = opentype.parse(fontBuffer);
+                this.loaded = true;
+                return this;
+            } catch (err) {
+                throw new Error('Could not load font: ' + err);
+            }
+        },
+        loadPromise: function () {
+            return new Promise((res, rej) => {
+                this.load(() => res())
+            })
+        }
+    };
+    return _fonts[family];
+}
+
+
 /**@ignore */
 export const debug_list_of_fonts = _fonts;
 
@@ -78,8 +135,8 @@ export const debug_list_of_fonts = _fonts;
  * @returns {object}
  */
 function findFont(family) {
-    if(_fonts[family]) return _fonts[family];
-    family =  Object.keys(_fonts)[0];
+    if (_fonts[family]) return _fonts[family];
+    family = Object.keys(_fonts)[0];
     return _fonts[family];
 }
 
@@ -94,36 +151,36 @@ function findFont(family) {
  *
  * @returns {void}
  */
-export function processTextPath(ctx,text,x,y, fill, hAlign, vAlign) {
+export function processTextPath(ctx, text, x, y, fill, hAlign, vAlign) {
     let font = findFont(ctx._font.family);
-    if(!font) {
-        console.warn("Font missing",ctx._font)
+    if (!font) {
+        console.warn("Font missing", ctx._font)
     }
-    const metrics = measureText(ctx,text)
-    if(hAlign === 'start' || hAlign === 'left') /* x = x*/ ;
-    if(hAlign === 'end'   || hAlign === 'right')  x = x - metrics.width
-    if(hAlign === 'center')  x = x - metrics.width/2
+    const metrics = measureText(ctx, text)
+    if (hAlign === 'start' || hAlign === 'left') /* x = x*/;
+    if (hAlign === 'end' || hAlign === 'right') x = x - metrics.width
+    if (hAlign === 'center') x = x - metrics.width / 2
 
-    if(vAlign === 'alphabetic') /* y = y */ ;
-    if(vAlign === 'top') y = y + metrics.emHeightAscent
-    if(vAlign === 'middle') y = y + metrics.emHeightAscent/2+metrics.emHeightDescent/2
-    if(vAlign === 'bottom') y = y + metrics.emHeightDescent
+    if (vAlign === 'alphabetic') /* y = y */;
+    if (vAlign === 'top') y = y + metrics.emHeightAscent
+    if (vAlign === 'middle') y = y + metrics.emHeightAscent / 2 + metrics.emHeightDescent / 2
+    if (vAlign === 'bottom') y = y + metrics.emHeightDescent
     const size = ctx._font.size
-    font.load(function(){
+    font.load(function () {
         const path = font.font.getPath(text, x, y, size)
         ctx.beginPath();
-        path.commands.forEach(function(cmd) {
-            switch(cmd.type) {
-                case 'M': ctx.moveTo(cmd.x,cmd.y); break;
-                case 'Q': ctx.quadraticCurveTo(cmd.x1,cmd.y1,cmd.x,cmd.y); break;
-                case 'L': ctx.lineTo(cmd.x,cmd.y); break;
+        path.commands.forEach(function (cmd) {
+            switch (cmd.type) {
+                case 'M': ctx.moveTo(cmd.x, cmd.y); break;
+                case 'Q': ctx.quadraticCurveTo(cmd.x1, cmd.y1, cmd.x, cmd.y); break;
+                case 'L': ctx.lineTo(cmd.x, cmd.y); break;
                 case 'Z':
-                {
-                    ctx.closePath();
-                    fill ? ctx.fill() : ctx.stroke();
-                    ctx.beginPath();
-                    break;
-                }
+                    {
+                        ctx.closePath();
+                        fill ? ctx.fill() : ctx.stroke();
+                        ctx.beginPath();
+                        break;
+                    }
             }
         });
     });
@@ -137,18 +194,18 @@ export function processTextPath(ctx,text,x,y, fill, hAlign, vAlign) {
  *
  * @returns {object}
  */
-export function measureText(ctx,text) {
+export function measureText(ctx, text) {
     let font = findFont(ctx._font.family);
-    if(!font) console.warn("WARNING. Can't find font family ", ctx._font);
-    if(!font.font) console.warn("WARNING. Can't find font family ", ctx._font);
+    if (!font) console.warn("WARNING. Can't find font family ", ctx._font);
+    if (!font.font) console.warn("WARNING. Can't find font family ", ctx._font);
     const fsize = ctx._font.size
     const glyphs = font.font.stringToGlyphs(text)
     let advance = 0
-    glyphs.forEach(function(g) { advance += g.advanceWidth; })
+    glyphs.forEach(function (g) { advance += g.advanceWidth; })
 
     return {
-        width: advance/font.font.unitsPerEm*fsize,
-        emHeightAscent: font.font.ascender/font.font.unitsPerEm*fsize,
-        emHeightDescent: font.font.descender/font.font.unitsPerEm*fsize,
+        width: advance / font.font.unitsPerEm * fsize,
+        emHeightAscent: font.font.ascender / font.font.unitsPerEm * fsize,
+        emHeightDescent: font.font.descender / font.font.unitsPerEm * fsize,
     }
 }
