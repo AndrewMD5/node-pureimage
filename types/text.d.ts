@@ -51,6 +51,25 @@ export function registerFontBuffer(
     variant?: string
 ): FontRecord;
 
+/**
+ * Register a font from an ArrayBuffer
+ *
+ * @param {ArrayBuffer} fontBuffer A containing the binary font file(.eot, .ttf etc.)
+ * @param {string} family     The name to give the font
+ * @param {number} weight     The font weight to use
+ * @param {string} style      Font style
+ * @param {string} variant    Font variant
+ *
+ * @returns {font} Font instance
+ */
+export function registerFontBuffer(
+    fontBuffer: ArrayBuffer,
+    family: string,
+    weight: number,
+    style: string,
+    variant: string
+): FontRecord;
+
 /**@ignore */
 export const debug_list_of_fonts: Record<string, FontRecord>;
 
